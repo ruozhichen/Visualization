@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+</head>
+<body>
+    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="main" class="main" style='height:230px;margin-bottom:1px;padding-bottom:0;border-bottom-width:0'></div>
+    <div id="main2" class="main" style='height:145px;margin-bottom:1px;padding:1px 10px;border-width:0 1px;'></div>
+    <div id="main3" class="main" style='height:105px;padding-top:1px;border-top-width:0'></div>
+	<div id="main4" class="main" style='height:700px;padding-top:1px;border-top-width:0'></div>
+    <!-- ECharts单文件引入 -->
+    <script src="http://echarts.baidu.com/build/dist/echarts.js"></script>
+    <script type="text/javascript">
+        // 路径配置
+        require.config({
+            paths: {
+                echarts: 'http://echarts.baidu.com/build/dist'
+				//echarts:'D:\大学课程\大三下\可视化\ECharts Tools\echarts-2.2.1\echarts-2.2.1'
+            }
+        });
+        
+        // 使用
+        require(
+            [
+                'echarts',
+                'echarts/chart/bar' ,// 使用柱状图就加载bar模块，按需加载
+				'echarts/chart/line',
+				'echarts/chart/pie',
+				'echarts/chart/map'
+            ],
+            function (ec) {
+			var axisData = [
+			'北京','天津','上海','重庆','安徽',
+			'福建','甘肃','广东','贵州','桂阳',
+			'海南','河北','河南','黑龙江','湖北',
+			'湖南','吉林','江苏','江西','辽宁',
+			'内蒙古','宁夏','青海','山东','山西',
+			'陕西','四川','西藏','新疆','云南',
+			'浙江'
+			];
+			//人口
+			var dataPop=[
+                {name:'西藏', value:300.22},
+                {name:'青海', value:562.66},
+                {name:'宁夏', value:630.14},
+                {name:'海南', value:273.16},
+                {name:'甘肃', value:2557.53},
+                {name:'贵州', value:3474.66},
+                {name:'新疆', value:2104.26},
+                {name:'云南', value:4596.6},
+                {name:'重庆', value:2884.62},
+                {name:'吉林', value:2746.23},
+                {name:'山西', value:3571.23},
+                {name:'天津', value:1293.82},
+                {name:'江西', value:4456.75},
+                {name:'广西', value:4602.67},
+                {name:'陕西', value:3732.72},
+                {name:'黑龙江', value:3831.22},
+                {name:'内蒙古', value:2470.64},
+                {name:'安徽', value:5950},
+                {name:'北京', value:1961.24},
+                {name:'福建', value:3689.41},
+                {name:'上海', value:2301.91},
+                {name:'湖北', value:5362.13},
+                {name:'湖南', value:6668.36},
+                {name:'四川', value:8041.83},
+                {name:'辽宁', value:4374.62},
+                {name:'河北', value:7185.43},
+                {name:'河南', value:9402.37},
+                {name:'浙江', value:5442.7},
+                {name:'山东', value:9579.3},
+                {name:'江苏', value:7866},
+                {name:'广东', value:10430.29}
+            ];
+			//人均GDP
+			var dataAve=[
+                {name:'西藏', value:16971},
+                {name:'青海', value:24659},
+                {name:'宁夏', value:24511},
+                {name:'海南', value:30068},
+                {name:'甘肃', value:15803},
+                {name:'贵州', value:13396},
+                {name:'新疆', value:29188},
+                {name:'云南', value:16107},
+                {name:'重庆', value:27367},
+                {name:'吉林', value:34662},
+                {name:'山西', value:25163},
+                {name:'天津', value:70402},
+                {name:'江西', value:21172},
+                {name:'广西', value:20668},
+                {name:'陕西', value:27104},
+                {name:'黑龙江', value:29642},
+                {name:'内蒙古', value:52077},
+                {name:'安徽', value:21503},
+                {name:'北京', value:70251},
+                {name:'福建', value:38851},
+                {name:'上海', value:73297},
+                {name:'湖北', value:27831},
+                {name:'湖南', value:24533},
+                {name:'四川', value:21690},
+                {name:'辽宁', value:47327},
+                {name:'河北', value:28621},
+                {name:'河南', value:24664},
+                {name:'浙江', value:49456},
+                {name:'山东', value:41853},
+                {name:'江苏', value:52091},
+                {name:'广东', value:45488}
+            ];
+			
+var myChart = ec.init(document.getElementById('main'));
+var option = {
+    title : {
+        text: '第六次人口普查'
+    },
+    tooltip : {
+        trigger: 'axis',
+        showDelay: 0,             // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
+        formatter: function (params) {
+            var res = params[0].name;
+            //res += '<br/>' + params[0].seriesName;
+            res += '<br/>  人口 : ' + params[0].value+' 万人';
+            return res;
+        }
+    },
+    legend: {
+		//图例
+        data:['省市人口','GDP(亿元)','人均GDP（元/人）']
+    },
+    toolbox: {
+        show : true,
+        feature : {
+			//辅助线标志
+            mark : {show: true},
+			//框选区域缩放
+            dataZoom : {show: true},
+			//动态类型切换
+            magicType : {show: true, type: ['line', 'bar','pie']},
+			//还原
+            restore : {show: true},
+			//保存图片
+            saveAsImage : {show: true}
+        }
+    },
+    dataZoom : {
+        y: 250,
+        show : true,
+        realtime: true,
+        start : 50,
+        end : 100
+    },
+    grid: {
+        x: 80,
+        y: 40,
+        x2:20,
+        y2:25
+    },
+    xAxis : [
+        {
+            type : 'category',
+            boundaryGap : true,
+            axisTick: {onGap:false},
+            splitLine: {show:false},
+            data : axisData
+        }
+    ],
+    yAxis : [
+        {
+            type : 'value',
+            scale:true,
+            boundaryGap: [1, 1],
+			min:0,
+			max:12000,
+            splitArea : {show : true}
+			
+        }
+    ],
+    series : [
+        {
+            name:'省市人口',
+            type:'bar',  //原本是k图，换了个柱形图就好了
+            data:[
+                1961.24,1293.82,2301.91,2884.62,5950,
+				3689.41,2557.53,10430.29,3474.66,4602.67,
+				273.16,7185.43,9402.37,3831.22,5362.13,
+				6668.36,2746.23,7866,4456.75,4374.62,
+				2470.64,630.14,562.66,9579.3,3571.23,
+				3732.72,8041.83,300.22,2104.26,4596.6,
+				5442.7
+            ]
+        },
+        {
+            name:'GDP(亿元)',
+            type:'line',
+            symbol: 'none',
+            data:[]
+        },
+        {
+            name:'人均GDP（元/人）',
+            type:'bar',
+			data:[]
+        }
+        
+    ]
+};
+myChart.setOption(option);               
+			   // 基于准备好的dom，初始化echarts图表
+
+var myChart2 = ec.init(document.getElementById('main2'));               
+var option2 = {
+    tooltip : {
+        trigger: 'axis',
+        showDelay: 0             // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
+    },
+    legend: {
+        y : -30,
+        data:['省市人口','GDP(亿元)','人均GDP（元/人）']
+    },
+    toolbox: {
+        y : -30,
+        show : true,
+        feature : {
+            mark : {show: true},
+            dataZoom : {show: true},
+            dataView : {show: true, readOnly: false},
+            magicType : {show: true, type: ['line', 'bar']},
+            restore : {show: true},
+            saveAsImage : {show: true}
+        }
+    },
+    dataZoom : {
+        show : true,
+        realtime: true,
+        start : 50,
+        end : 100
+    },
+    grid: {
+        x:75,
+        y:5,
+        x2:20,
+        y2:40
+    },
+    xAxis : [
+        {
+            type : 'category',
+            position:'top',
+            boundaryGap : true,
+            axisLabel:{show:false},
+            axisTick: {onGap:false},
+            splitLine: {show:false},
+            data : axisData
+        }
+    ],
+    yAxis : [
+        {
+            type : 'value',
+            scale:true,
+            splitNumber: 3,
+            boundaryGap: [1, 1],
+            axisLabel: {
+                formatter: function (v) {
+                    return Math.round(v/10000) + ' 万'
+                }
+            },
+			min:0,
+			max:60000,
+            splitArea : {show : true}
+        }
+    ],
+    series : [
+        {
+            name:'GDP(亿元)',
+            type:'line',
+            symbol: 'none',
+            data:[
+                13777.9, 9108.83, 16872.42, 7894.24, 12794.48, 
+				14333.78, 4041.84, 47445.74, 4654.98, 9512.95, 
+				821.34, 20565.91, 23190.42, 11356.68, 14923.73, 
+				16360.14, 9519.07, 40974.79, 9435.99, 20703.8, 
+				12866.38, 1544.59, 1387.47, 40093.12, 8986.35, 
+				10117.47, 17443.07, 509.49, 6142.05, 7403.82, 
+				26917.6
+            ],
+            markLine : {
+                symbol : 'none',
+                itemStyle : {
+                    normal : {
+                        color:'#1e90ff',
+                        label : {
+                            show:false
+                        }
+                    }
+                },
+                data : [
+                    {type : 'average', name: '平均值'}
+                ]
+            }
+        }
+    ]
+};
+        
+                // 为echarts对象加载数据 
+                myChart2.setOption(option2); 
+				
+	var option3 = {
+    tooltip : {
+        trigger: 'axis',
+        showDelay: 0             // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
+    },
+    legend: {
+        y : -30,
+        data:['省市人口','GDP(亿元)','人均GDP（元/人）']
+    },
+    toolbox: {
+        y : -30,
+        show : true,
+        feature : {
+            mark : {show: true},
+            dataZoom : {show: true},
+            dataView : {show: true, readOnly: false},
+            magicType : {show: true, type: ['line', 'bar']},
+            restore : {show: true},
+            saveAsImage : {show: true}
+        }
+    },
+    dataZoom : {
+        y:200,
+        show : true,
+        realtime: true,
+        start : 50,
+        end : 100
+    },
+    grid: {
+        x: 80,
+        y:5,
+        x2:20,
+        y2:30
+    },
+    xAxis : [
+        {
+            type : 'category',
+            position:'bottom',
+            boundaryGap : true,
+            axisTick: {onGap:false},
+            splitLine: {show:false},
+            data : axisData
+        }
+    ],
+    yAxis : [
+        {
+            type : 'value',
+            scale:true,
+            splitNumber:4,
+            boundaryGap: [1, 1],
+            axisLabel: {
+                formatter: function (v) {
+                    return Math.round(v/10000) + ' 万'
+                }
+            },
+			min:0,
+			max:80000,
+            splitArea : {show : true}
+        }
+    ],
+    series : [
+        {
+            name:'人均GDP（元/人）',
+            type:'bar',
+            symbol: 'none',
+            data:[
+                70251,70402,73297,27367,21503,
+				38851,15804,45488,13397,20668,
+				30068,28622,24664,29642,27832,
+				24534,34662,52091,21172,47327,
+				52077,24512,24659,41854,25163,
+				27105,21690,16971,29189,16107,
+				49456 
+            ],
+            markLine : {
+                symbol : 'none',
+                itemStyle : {
+                    normal : {
+                        color:'#1e90ff',
+                        label : {
+                            show:false
+                        }
+                    }
+                },
+                data : [
+                    {type : 'average', name: '平均值'}
+                ]
+            }
+        }
+    ]
+	};
+	var myChart3 = ec.init(document.getElementById('main3'));
+	myChart3.setOption(option3);
+	myChart.connect([myChart2, myChart3]);
+	myChart2.connect([myChart, myChart3]);
+	myChart3.connect([myChart, myChart2]);
+
+	setTimeout(function (){
+		window.onresize = function () {
+			myChart.resize();
+			myChart2.resize();
+			myChart3.resize();
+		}
+	},200);
+
+	var myChart4 = ec.init(document.getElementById('main4')); 
+                
+    var option4 = {          
+		title : {
+			text: '第六次人口普查'
+		},
+		tooltip : {
+			trigger: 'item',  //点触发
+			formatter: function (params) {
+				var res = params.name; //应该是这里只定义了一个option，所以params.name
+				//多个的话，params就为数组
+				res += '<br/>' + params.seriesName;
+				res += '<br/>' + params.value+'亿元';
+				//res += '<br/>' + params.value;
+				return res;
+			}
+		},
+		legend: {
+			x:'right',
+			selectedMode:false,
+			data:['北京','上海','广东']
+		},
+		dataRange: {
+			orient: 'horizontal',
+			min: 0,
+			max: 50000,
+			text:['高','低'],           // 文本，默认为数值文本
+			splitNumber:0
+		},
+		toolbox: {
+			show : true,
+			orient: 'vertical',
+			x:'right',
+			y:'center',
+			feature : {
+				mark : {show: true},
+				dataView : {show: true, readOnly: false}
+			}
+		},
+		series : [
+			{
+				name: '第六次人口普查全国GDP分布',
+				type: 'map',
+				mapType: 'china',
+				mapLocation: {
+					x: 'left'
+				},
+				selectedMode : 'multiple',
+				itemStyle:{
+					normal:{label:{show:true}},
+					emphasis:{label:{show:true}}
+				},
+				data:[
+                {name:'西藏', value:509.49},
+                {name:'青海', value:1387.47},
+                {name:'宁夏', value:1544.59},
+                {name:'海南', value:821.34},
+                {name:'甘肃', value:4041.84},
+                {name:'贵州', value:4654.98},
+                {name:'新疆', value:6142.05},
+                {name:'云南', value:7403.82},
+                {name:'重庆', value:7894.24},
+                {name:'吉林', value:9519.07},
+                {name:'山西', value:8986.35},
+                {name:'天津', value:9108.83},
+                {name:'江西', value:9435.99},
+                {name:'广西', value:9512.95},
+                {name:'陕西', value:10117.47},
+                {name:'黑龙江', value:11356.68},
+                {name:'内蒙古', value:12866.38},
+                {name:'安徽', value:12794.48},
+                {name:'北京', value:13777.9, selected:true},
+                {name:'福建', value:14333.78},
+                {name:'上海', value:16872.42, selected:true},
+                {name:'湖北', value:14923.73},
+                {name:'湖南', value:16360.14},
+                {name:'四川', value:17443.07},
+                {name:'辽宁', value:20703.8},
+                {name:'河北', value:20565.91},
+                {name:'河南', value:23190.42},
+                {name:'浙江', value:26917.6},
+                {name:'山东', value:40093.12},
+                {name:'江苏', value:40974.79},
+                {name:'广东', value:47445.74, selected:true}
+				]
+			},
+        {
+            name:'全国GDP对比',
+            type:'pie',
+            roseType : 'area',
+            tooltip: {
+                trigger: 'item',
+                formatter: "{a} <br/>{b} : {c}亿元 ({d}%)"
+            },
+			//圆心坐标
+            center: [document.getElementById('main').offsetWidth - 300, 125],
+            radius: [30, 80],
+            data:[
+                {name: '北京', value: 13777.9},
+                {name: '上海', value: 16872.42},
+                {name: '广东', value: 47445.74}
+            ]
+        },
+		{
+            name:'全国人口对比', //名称要不一样，才ok
+            type:'pie',
+            roseType : 'area',
+            tooltip: {
+                trigger: 'item',
+                formatter: "{a} <br/>{b} : {c}万({d}%)"
+            },
+			//圆心坐标
+            center: [document.getElementById('main').offsetWidth - 300, 350],
+            radius: [30, 80],
+            data:[
+                {name: '北京', value: 1961.24},
+                {name: '上海', value: 2301.91},
+                {name: '广东', value: 10430.29}
+            ]
+        },
+		{
+            name:'全国人均GDP对比', //名称要不一样，才ok
+            type:'pie',
+            roseType : 'area',
+            tooltip: {
+                trigger: 'item',
+                formatter: "{a} <br/>{b} : {c} (元/人)"
+            },
+			//圆心坐标
+            center: [document.getElementById('main').offsetWidth - 300, 575],
+            radius: [30, 80],
+            data:[
+                {name: '北京', value: 70251},
+                {name: '上海', value: 73297},
+                {name: '广东', value: 45488}
+            ]
+        }
+    ],
+	//是否启用图表初试化动画，默认开启。
+    animation: false
+}; //option4
+	var ecConfig = require('echarts/config');
+//该函数加选择的数据增加到第二个series中
+	myChart4.on(ecConfig.EVENT.MAP_SELECTED, function (param){
+    var selected = param.selected;
+    var mapSeries = option4.series[0];
+	var mapData1=option4.data1;
+	//var mapData2=option.data2;
+    var data11 = [];
+	var data22 = [];
+	var data33 = [];
+    var legendData = [];
+    var name;
+    for (var p = 0, len = mapSeries.data.length; p < len; p++) {
+        name = mapSeries.data[p].name;
+        //mapSeries.data[p].selected = selected[name];
+        if (selected[name]) {
+            data11.push({
+                name: name,
+                value: mapSeries.data[p].value
+				//value: option.data123[p]
+            });
+			data22.push({
+                name: name,
+                value: dataPop[p].value
+            });
+			data33.push({
+                name: name,
+                value: dataAve[p].value
+            });
+            legendData.push(name);
+        }
+    }
+    option4.legend.data = legendData;
+    option4.series[1].data = data11;
+	option4.series[2].data = data22;
+	option4.series[3].data = data33;
+	//revise
+	//option.series[2].data=data;
+    myChart4.setOption(option4, true);
+	})
+                // 为echarts对象加载数据 
+    myChart4.setOption(option4);
+        } //function
+    );
+    </script>
+</body>
