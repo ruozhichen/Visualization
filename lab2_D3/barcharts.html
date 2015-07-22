@@ -1,0 +1,688 @@
+<html>  
+  <head>  
+        <meta charset="utf-8">  
+        <title>Lab3_Bar Chart-Suochen Xia</title>  
+  </head> 
+
+<style>
+
+.axis path,
+.axis line{
+	fill: none;
+	stroke: black;
+	shape-rendering: crispEdges;
+}
+
+.axis text {
+	font-family: sans-serif;
+	font-size: 11px;
+}
+div.tooltip2 {
+    position: absolute;
+    width: 150px;
+    height: auto;
+    padding: 10px;
+    font: 12px sans-serif;
+    text-align: center;
+    background-color: white;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+    -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+	background: steelblue;
+	color: white;
+}
+
+div.tooltip3 {
+  position: absolute;
+  text-align: center;
+  width: 350px;
+  height: 15px;
+  padding: 2px;
+  font: 20px sans-serif;
+  border: 0px;
+  border-radius: 3px;
+  pointer-events: none;
+  font-weight: bold;
+}
+
+</style>
+    <body>  
+		<script src="d3.min.js" charset="utf-8"></script>  
+        <script>
+		
+		var data=[
+			{name:"上海",pop:2301.91,GDP:16872.42,aveGDP:73297,dollar:10828,ratio:2.20,rank:1},
+			{name:"天津",pop:1293.82,GDP:9108.83,aveGDP:70402,dollar:10400,ratio:2.11,rank:2},
+			{name:"北京",pop:1961.24,GDP:13777.9,aveGDP:70251,dollar:10378,ratio:2.10,rank:3},
+			{name:"江苏",pop:7866,GDP:40974.79,aveGDP:52091,dollar:7695,ratio:1.56,rank:4},
+			{name:"内蒙古",pop:2470.64,GDP:12866.38,aveGDP:52077,dollar:7693,ratio:1.56,rank:5},
+			{name:"浙江",pop:5442.7,GDP:26917.6,aveGDP:49456,dollar:7306,ratio:1.48,rank:6},
+			{name:"辽宁",pop:4374.62,GDP:20703.8,aveGDP:47327,dollar:6991,ratio:1.42,rank:7},
+			{name:"广东",pop:10430.29,GDP:47445.74,aveGDP:45488,dollar:6720,ratio:1.36,rank:8},
+			{name:"山东",pop:9579.3,GDP:40093.12,aveGDP:41854,dollar:6183,ratio:1.25,rank:9},
+			{name:"福建",pop:3689.41,GDP:14333.78,aveGDP:38851,dollar:5739,ratio:1.16,rank:10},
+			{name:"吉林",pop:2746.23,GDP:9519.07,aveGDP:34662,dollar:5120,ratio:1.04,rank:11},
+			{name:"海南",pop:273.16,GDP:821.34,aveGDP:30068,dollar:4442,ratio:0.90,rank:12},
+			{name:"黑龙江",pop:3831.22,GDP:11356.68,aveGDP:29642,dollar:4379,ratio:0.89,rank:13},
+			{name:"新疆",pop:2104.26,GDP:6142.05,aveGDP:29189,dollar:4312,ratio:0.87,rank:14},
+			{name:"河北",pop:7185.43,GDP:20565.91,aveGDP:28622,dollar:4228,ratio:0.86,rank:15},
+			{name:"湖北",pop:5362.13,GDP:14923.73,aveGDP:27832,dollar:4111,ratio:0.83,rank:16},
+			{name:"重庆",pop:2884.62,GDP:7894.24,aveGDP:27367,dollar:4043,ratio:0.82,rank:17},
+			{name:"陕西",pop:3732.72,GDP:10117.47,aveGDP:27105,dollar:4004,ratio:0.81,rank:18},
+			{name:"山西",pop:3571.23,GDP:8986.35,aveGDP:25163,dollar:3717,ratio:0.75,rank:19},
+			{name:"河南",pop:9402.37,GDP:23190.42,aveGDP:24664,dollar:3643,ratio:0.74,rank:20},
+			{name:"青海",pop:562.66,GDP:1387.47,aveGDP:24659,dollar:3643,ratio:0.74,rank:21},
+			{name:"湖南",pop:6668.36,GDP:16360.14,aveGDP:24534,dollar:3624,ratio:0.74,rank:22},
+			{name:"宁夏",pop:630.14,GDP:1544.59,aveGDP:24512,dollar:3621,ratio:0.73,rank:23},
+			{name:"四川",pop:8041.83,GDP:17443.07,aveGDP:21690,dollar:3204,ratio:0.65,rank:24},
+			{name:"安徽",pop:5950,GDP:12794.48,aveGDP:21503,dollar:3177,ratio:0.64,rank:25},
+			{name:"江西",pop:4456.75,GDP:9435.99,aveGDP:21172,dollar:3128,ratio:0.63,rank:26},
+			{name:"广西",pop:4602.67,GDP:9512.95,aveGDP:20668,dollar:3053,ratio:0.62,rank:27},
+			{name:"西藏",pop:300.22,GDP:509.49,aveGDP:16971,dollar:2507,ratio:0.51,rank:28},
+			{name:"云南",pop:4596.6,GDP:7403.82,aveGDP:16107,dollar:2379,ratio:0.48,rank:29},
+			{name:"甘肃",pop:2557.53,GDP:4041.84,aveGDP:15804,dollar:2335,ratio:0.47,rank:30},
+			{name:"贵州",pop:3474.66,GDP:4654.98,aveGDP:13397,dollar:1979,ratio:0.40,rank:31}
+            ];
+			
+			
+//---------------------------------------------------
+//三幅柱形图合并在一起
+		var BAR1_COLOR = '#6ea865';
+		var BAR2_COLOR = '#ff99cc';
+		var BAR3_COLOR = '#2E8ECE';
+		var width34 = 1200;
+		var height34 = 600;
+		var length34=31;
+		var svg34 = d3.select("body").append("svg")
+								.attr("width",width34)
+								.attr("height",height34);
+		//定义坐标轴的 scale （比例尺） 和坐标轴，48行为 x 轴，52行为 y 轴
+		var xAxisScale34 = d3.scale.ordinal()
+						.domain(d3.range(length34))
+						.rangeRoundBands([0,width34]);//用几个离散区间来分割一个连续的区间，区间边界和宽度会取整。
+							
+		var yAxisScale34 = d3.scale.linear()
+						.domain([0,11000])
+						.range([500,0]);  //注意y轴range的顺序！，若反过来，y坐标最上面为0
+							
+		var xAxis34 = d3.svg.axis()
+						.scale(xAxisScale34)
+						.orient("bottom");
+		
+		var yAxis34 = d3.svg.axis()
+						.scale(yAxisScale34)
+						.orient("left")
+						.ticks(8)
+					.tickFormat(function(d) { return d; })
+					.tickValues([0, 500, 2000,4000, 6000,8000, 9000, 11000]);
+		//定义柱形图的 scale
+		var xScale34 = d3.scale.ordinal()
+						.domain(d3.range(length34))
+						.rangeRoundBands([0,width34],0.05);
+							
+		var yScale34 = d3.scale.linear()
+						.domain([0,11000])
+						.range([0,500]);
+		
+		var div34 = d3.select("body").append("div")
+			.attr("class", "tooltip2")
+			.style("opacity", 0);  
+			
+		var div32 = d3.select("body").append("div")
+			.attr("class", "tooltip2")
+			.style("opacity", 0);  
+			
+		var div33 = d3.select("body").append("div")
+			.attr("class", "tooltip2")
+			.style("opacity", 0);  
+				//绘制柱形图，注意 scale 的使用
+				
+				
+		//是for里面出了问题
+		//var g = svg31.append("g"); 
+		for (var idx in data) {
+				//人口
+				svg34.append("rect")
+					  .attr("class", "population")
+					  .style("fill", BAR1_COLOR)
+					  .attr("state",idx)
+					  .attr("stroke","#3366ff")
+					  .attr("stroke-width",1)
+					  .attr("width", 10)  //柱形宽度
+					  .attr("x", function(d){
+							return 55 + xScale34(idx);
+					   } )
+					   .attr("y",function(d){
+							return 50 + 500 - yScale34(data[idx].pop) ;
+					   })
+					   .attr("height",function(d){
+							return yScale34(data[idx].pop);  //柱形的高度
+					   });	
+						
+				//GDP(十亿元)
+				svg34.append("rect")
+					  .attr("class", "population")
+					  .style("fill", BAR2_COLOR)
+					  .attr("stroke","#3366ff")
+					  .attr("stroke-width",1)
+					  .attr("width", 10)  //柱形宽度
+					  .attr("x", function(d){
+							return 65 + xScale34(idx);
+					   } )
+					   .attr("y",function(d){
+							return 50 + 500 - yScale34(data[idx].GDP/10) ;
+					   })
+					   .attr("height",function(d){
+							return yScale34(data[idx].GDP/10);  //柱形的高度
+					   });	
+				//人均GDP(美元)
+				svg34.append("rect")
+					  .attr("class", "population")
+					  .style("fill", BAR3_COLOR)
+					  .attr("stroke","#3366ff")
+					  .attr("stroke-width",1)
+					  .attr("width", 10)  //柱形宽度
+					  .attr("x", function(d){
+							return 75 + xScale34(idx);
+					   } )
+					   .attr("y",function(d){
+							return 50 + 500 - yScale34(data[idx].aveGDP/6.7695) ;
+					   })
+					   .attr("height",function(d){
+							return yScale34(data[idx].aveGDP/6.7695);  //柱形的高度
+					   });	
+		}
+		   
+		//绘制文字标签，同样注意 scale
+		//x,y为文字的坐标
+		svg34.selectAll("text")
+            .data(data)
+            .enter()
+			.append("text")
+            .attr("x", function(d,i){
+				return 50 + xScale34(i);  
+		   } )
+		   .attr("y",function(d,i){
+				return 50 + 500+20;
+		   })
+            .attr("dx", function(d,i){
+				return 1;  //坐标偏移量
+		   })
+            .attr("dy", 15)
+			.attr("text-anchor", "begin")
+			.attr("font-size", 14)
+			.attr("fill","black")
+            .text(function(d,i){
+				return d.name;
+			});
+		//绘制坐标轴   
+		svg34.append("g")
+			.attr("class","axis")
+			.attr("transform","translate(50,550)")
+			.call(xAxis34);
+			
+		svg34.append("g")
+			.attr("class","axis")
+			.attr("transform","translate(50,50)")
+			.call(yAxis34)
+			.append("text")
+			.attr("transform", "rotate(-90)")
+			.attr("x", -250)
+			.attr("y", -40)
+			.attr("dy", ".5em")
+			.style("text-anchor", "middle")
+			.text("人口(万人) "+"GDP(十亿元) "+" "+"人均GDP(美元)")
+			.style("font-weight","bold");
+			
+		var title34 = d3.select("body").append("div")
+			.attr("class", "tooltip3")
+			.style("opacity", 1)
+			.html("全国各省份人口分布")
+			.style("left", 300)
+			.style("top", 20);  
+			
+		
+		//定义人口的图例说明
+			var legend1 = svg34.append("g")
+				.attr("class", "legend")
+				.attr("transform", function(d, i) { return "translate(0,20)"; });
+
+			legend1.append("rect")
+				.attr("x", 850)
+				.attr("width", 18)
+				.attr("height", 18)
+				.style("fill", BAR1_COLOR);
+
+			legend1.append("text")
+				.attr("x", 830)
+				.attr("y", 9)
+				.attr("dy", ".35em")
+				.style("text-anchor", "end")
+				.text(function(d) { return "人口(万人)"; });
+				
+		//定义GDP的图例说明
+			var legend2 = svg34.append("g")
+				.attr("class", "legend")
+				.attr("transform", function(d, i) { return "translate(0,40)"; });
+
+			legend2.append("rect")
+				.attr("x", 850)
+				.attr("width", 18)
+				.attr("height", 18)
+				.style("fill", BAR2_COLOR);
+
+			legend2.append("text")
+				.attr("x", 830)
+				.attr("y", 9)
+				.attr("dy", ".35em")
+				.style("text-anchor", "end")
+				.text(function(d) { return "GDP(十亿元)"; });
+				
+			//定义人均GDP的图例说明
+			var legend3 = svg34.append("g")
+				.attr("class", "legend")
+				.attr("transform", function(d, i) { return "translate(0,60)"; });
+
+			legend3.append("rect")
+				.attr("x", 850)
+				.attr("width", 18)
+				.attr("height", 18)
+				.style("fill", BAR3_COLOR);
+
+			legend3.append("text")
+				.attr("x", 830)
+				.attr("y", 9)
+				.attr("dy", ".35em")
+				.style("text-anchor", "end")
+				.text(function(d) { return "人均GDP(美元/人)"; });
+//---------------------------------------------------
+//---------------------------------------------------
+//三幅柱形图
+//1.人口分布
+		var BAR1_COLOR = '#6ea865';
+		var width31 = 1200;
+		var height31 = 600;
+		var length31=31;
+		var svg31 = d3.select("body").append("svg")
+								.attr("width",width31)
+								.attr("height",height31);
+		//定义坐标轴的 scale （比例尺） 和坐标轴，48行为 x 轴，52行为 y 轴
+		var xAxisScale31 = d3.scale.ordinal()
+						.domain(d3.range(length31))
+						.rangeRoundBands([0,1000]);//用几个离散区间来分割一个连续的区间，区间边界和宽度会取整。
+							
+		var yAxisScale31 = d3.scale.linear()
+						.domain([0,11000])
+						.range([500,0]);  //注意y轴range的顺序！，若反过来，y坐标最上面为0
+							
+		var xAxis31 = d3.svg.axis()
+						.scale(xAxisScale31)
+						.orient("bottom");
+		
+		var yAxis31 = d3.svg.axis()
+						.scale(yAxisScale31)
+						.orient("left")
+						.ticks(8)
+					.tickFormat(function(d) { return d; })
+					.tickValues([0, 500, 2000,3000, 4000,7000, 9000, 11000]);
+		//定义柱形图的 scale
+		var xScale31 = d3.scale.ordinal()
+						.domain(d3.range(length31))
+						.rangeRoundBands([0,1000],0.05);
+							
+		var yScale31 = d3.scale.linear()
+						.domain([0,11000])
+						.range([0,500]);
+		
+		var div31 = d3.select("body").append("div")
+			.attr("class", "tooltip2")
+			.style("opacity", 0);  
+				//绘制柱形图，注意 scale 的使用
+		svg31.selectAll("rect")
+		   .data(data)
+		   .enter()
+		   .append("rect")
+		   .attr("x", function(d,i){
+				return 50 + xScale31(i);
+		   } )
+		   .attr("y",function(d,i){
+				return 50 + 500 - yScale31(d.pop) ;
+		   })
+		   .attr("width", function(d,i){
+				return xScale31.rangeBand();
+		   })
+		   .attr("height",function(d,i){
+				return yScale31(d.pop);  //柱形的高度
+		   })
+		   .attr("fill",BAR1_COLOR)
+		   .on("click",function(d,i){
+				d3.select(this)
+				  .attr("fill","green");
+		   })
+		   .on("mouseover",function(d,i){
+				var x=20 + xScale31(i);
+				var y=height34+40 + 500 - yScale31(d.pop)-50;
+				d3.select(this)
+				  .attr("fill","yellow");
+				div31.transition().duration(200).style("opacity", 1);
+				div31.html(d.name + "<br/>"+"人口："+d.pop+ "万人")
+				.style("left", x + "px")
+				.style("top", y + "px");
+		   })
+		   .on("mouseout",function(d,i){
+				d3.select(this)
+				  .transition()
+		          .duration(500)
+				  .attr("fill",BAR1_COLOR);
+				div31.transition().duration(500).style("opacity", 0);
+		   });	
+		//绘制文字标签，同样注意 scale
+		//x,y为文字的坐标
+		svg31.selectAll("text")
+            .data(data)
+            .enter()
+			.append("text")
+            .attr("x", function(d,i){
+				return 50 + xScale31(i);  
+		   } )
+		   .attr("y",function(d,i){
+				return 50 + 500 - yScale31(d.pop)-20 ;
+		   })
+            .attr("dx", function(d,i){
+				return 1;  //坐标偏移量
+		   })
+            .attr("dy", 15)
+			.attr("text-anchor", "begin")
+			.attr("font-size", 14)
+			.attr("fill","black")
+            .text(function(d,i){
+				return d.name;
+			});
+			
+		//绘制坐标轴   
+		svg31.append("g")
+			.attr("class","axis")
+			.attr("transform","translate(50,550)")
+			.call(xAxis31);
+			
+		svg31.append("g")
+			.attr("class","axis")
+			.attr("transform","translate(50,50)")
+			.call(yAxis31)
+			.append("text")
+			.attr("transform", "rotate(-90)")
+			.attr("x", -250)
+			.attr("y", -20)
+			.attr("dy", ".5em")
+			.style("text-anchor", "middle")
+			.text("人口(万人)")
+			.style("font-weight","bold");
+			
+		var title31 = d3.select("body").append("div")
+			.attr("class", "tooltip3")
+			.style("opacity", 1)
+			.html("全国各省份人口分布")
+			.style("left", 300)
+			.style("top", height34+20);  
+//------------------------------------------------
+//2.GDP分布
+var BAR2_COLOR = '#ff99cc';
+		var width32 = 1200;
+		var height32 = 600;
+		var length32=31;
+		//定义 svg
+		var svg32 = d3.select("body").append("svg")
+								.attr("width",width32)
+								.attr("height",height32);
+		//定义坐标轴的 scale （比例尺） 和坐标轴，48行为 x 轴，52行为 y 轴
+		var xAxisScale32 = d3.scale.ordinal()
+						.domain(d3.range(length32))
+						.rangeRoundBands([0,1000]);//用几个离散区间来分割一个连续的区间，区间边界和宽度会取整。
+							
+		var yAxisScale32 = d3.scale.linear()
+						.domain([0,50000])
+						.range([500,0]);  //注意y轴range的顺序！，若反过来，y坐标最上面为0
+							
+		var xAxis32 = d3.svg.axis()
+						.scale(xAxisScale32)
+						.orient("bottom");
+		
+		var yAxis32 = d3.svg.axis()
+						.scale(yAxisScale32)
+						.orient("left")
+						.ticks(8)
+					.tickFormat(function(d) { return d; })
+					.tickValues([0, 5000, 10000,15000, 20000,30000, 40000, 50000]);
+		//定义柱形图的 scale
+		var xScale32 = d3.scale.ordinal()
+						.domain(d3.range(length32))
+						.rangeRoundBands([0,1000],0.05);
+							
+		var yScale32 = d3.scale.linear()
+						.domain([0,50000])
+						.range([0,500]);
+		
+		var div32 = d3.select("body").append("div")
+			.attr("class", "tooltip2")
+			.style("opacity", 0);  
+				//绘制柱形图，注意 scale 的使用
+		svg32.selectAll("rect")
+		   .data(data)
+		   .enter()
+		   .append("rect")
+		   .attr("x", function(d,i){
+				return 50 + xScale32(i);
+		   } )
+		   .attr("y",function(d,i){
+				return 50 + 500 - yScale32(d.GDP) ;
+		   })
+		   .attr("width", function(d,i){
+				return xScale32.rangeBand();
+		   })
+		   .attr("height",function(d,i){
+				return yScale32(d.GDP);  //柱形的高度
+		   })
+		   .attr("fill",BAR2_COLOR)
+		   .on("click",function(d,i){
+				d3.select(this)
+				  .attr("fill","green");
+		   })
+		   .on("mouseover",function(d,i){
+				var x=20 + xScale32(i);
+				var y=40 + 500 - yScale32(d.GDP)-50+height34;
+				d3.select(this)
+				  .attr("fill","yellow");
+				div32.transition().duration(200).style("opacity", 1);
+				div32.html(d.name + "<br/>"+"GDP："+d.GDP+ "亿元")
+				.style("left", x + "px")
+				.style("top", (y + height31)+"px");
+		   })
+		   .on("mouseout",function(d,i){
+				d3.select(this)
+				  .transition()
+		          .duration(500)
+				  .attr("fill",BAR2_COLOR);
+				div32.transition().duration(500).style("opacity", 0);
+		   });
+		//绘制文字标签，同样注意 scale
+		//x,y为文字的坐标
+		svg32.selectAll("text")
+            .data(data)
+            .enter()
+			.append("text")
+            .attr("x", function(d,i){
+				return 50 + xScale32(i);  
+		   } )
+		   .attr("y",function(d,i){
+				return 50 + 500 - yScale32(d.GDP)-20 ;
+		   })
+            .attr("dx", function(d,i){
+				return 1;  //坐标偏移量
+		   })
+            .attr("dy", 15)
+			.attr("text-anchor", "begin")
+			.attr("font-size", 14)
+			.attr("fill","black")
+            .text(function(d,i){
+				return d.name;
+			});
+		//绘制坐标轴   
+		svg32.append("g")
+			.attr("class","axis")
+			.attr("transform","translate(50,550)")
+			.call(xAxis32);
+			
+		svg32.append("g")
+			.attr("class","axis")
+			.attr("transform","translate(50,50)")
+			.call(yAxis32)
+			.append("text")
+			.attr("transform", "rotate(-90)")
+			.attr("x", -250)
+			.attr("y", -20)
+			.attr("dy", ".5em")
+			.style("text-anchor", "middle")
+			.text("GDP(亿元)")
+			.style("font-weight","bold");
+			
+		var title32 = d3.select("body").append("div")
+			.attr("class", "tooltip3")
+			.style("opacity", 1)
+			.html("全国各省份GDP分布")
+			.style("left", 300)
+			.style("top", height31+height34+20);  
+//---------------------------------------------------
+//3.人均GDP分布
+		var BAR3_COLOR = '#2E8ECE';
+		var width33 = 1200;
+		var height33 = 600;
+		var length33=31;
+		//定义 svg
+		var svg33 = d3.select("body").append("svg")
+								.attr("width",width33)
+								.attr("height",height33);
+		//定义坐标轴的 scale （比例尺） 和坐标轴，48行为 x 轴，52行为 y 轴
+		var xAxisScale33 = d3.scale.ordinal()
+						.domain(d3.range(length33))
+						.rangeRoundBands([0,1000]);//用几个离散区间来分割一个连续的区间，区间边界和宽度会取整。
+							
+		var yAxisScale33 = d3.scale.linear()
+						.domain([0,80000])
+						.range([500,0]);  //注意y轴range的顺序！，若反过来，y坐标最上面为0
+							
+		var xAxis33 = d3.svg.axis()
+						.scale(xAxisScale33)
+						.orient("bottom");
+		
+		var yAxis33 = d3.svg.axis()
+						.scale(yAxisScale33)
+						.orient("left")
+						.ticks(8)
+					.tickFormat(function(d) { return d; })
+					.tickValues([0, 10000,20000, 30000,50000,60000, 70000, 80000]);
+		//定义柱形图的 scale
+		var xScale33 = d3.scale.ordinal()
+						.domain(d3.range(length33))
+						.rangeRoundBands([0,1000],0.05);
+							
+		var yScale33 = d3.scale.linear()
+						.domain([0,80000])
+						.range([0,500]);
+		
+		var div33 = d3.select("body").append("div")
+			.attr("class", "tooltip2")
+			.style("opacity", 0);  
+				//绘制柱形图，注意 scale 的使用
+		svg33.selectAll("rect")
+		   .data(data)
+		   .enter()
+		   .append("rect")
+		   .attr("x", function(d,i){
+				return 50 + xScale33(i);
+		   } )
+		   .attr("y",function(d,i){
+				return 50 + 500 - yScale33(d.aveGDP) ;
+		   })
+		   .attr("width", function(d,i){
+				return xScale33.rangeBand();
+		   })
+		   .attr("height",function(d,i){
+				return yScale33(d.aveGDP);  //柱形的高度
+		   })
+		   .attr("fill",BAR3_COLOR)
+		   .on("click",function(d,i){
+				d3.select(this)
+				  .attr("fill","green");
+		   })
+		   .on("mouseover",function(d,i){
+				var x=20 + xScale33(i);
+				var y=40 + 500 - yScale33(d.aveGDP)-50+height34;
+				d3.select(this)
+				  .attr("fill","yellow");
+				div33.transition().duration(200).style("opacity", 1);
+				div33.html(d.name + "<br/>"+"人均GDP："+d.aveGDP+ "元/人")
+				.style("left", x + "px")
+				.style("top", (y + height31+height32) + "px");
+		   })
+		   .on("mouseout",function(d,i){
+				d3.select(this)
+				  .transition()
+		          .duration(500)
+				  .attr("fill",BAR3_COLOR);
+				div33.transition().duration(500).style("opacity", 0);
+		   });
+		//绘制文字标签，同样注意 scale
+		//x,y为文字的坐标
+		svg33.selectAll("text")
+            .data(data)
+            .enter()
+			.append("text")
+            .attr("x", function(d,i){
+				return 50 + xScale33(i);  
+		   } )
+		   .attr("y",function(d,i){
+				return 50 + 500 - yScale33(d.aveGDP)-20 ;
+		   })
+            .attr("dx", function(d,i){
+				return 1;  //坐标偏移量
+		   })
+            .attr("dy", 15)
+			.attr("text-anchor", "begin")
+			.attr("font-size", 14)
+			.attr("fill","black")
+            .text(function(d,i){
+				return d.name;
+			});
+		//绘制坐标轴   
+		svg33.append("g")
+			.attr("class","axis")
+			.attr("transform","translate(50,550)")
+			.call(xAxis33);
+			
+		svg33.append("g")
+			.attr("class","axis")
+			.attr("transform","translate(50,50)")
+			.call(yAxis33)
+			.append("text")
+			.attr("transform", "rotate(-90)")
+			.attr("x", -250)
+			.attr("y", -20)
+			.attr("dy", ".5em")
+			.style("text-anchor", "middle")
+			.text("人均GDP(元/人)")
+			.style("font-weight","bold");
+			
+		var title33 = d3.select("body").append("div")
+			.attr("class", "tooltip3")
+			.style("opacity", 1)
+			.html("全国各省份人均GDP分布")
+			.style("left", 300)
+			.style("top", height31+height32+height34+20);  
+        </script>  
+		
+    </body>  
+</html>

@@ -1,0 +1,594 @@
+
+<html>  
+  <head>  
+        <meta charset="utf-8">  
+        <title>Lab3_Map-Suochen Xia</title>  
+  </head> 
+<style>
+
+.background {
+  fill: none;
+  pointer-events: all;
+}
+
+#states {
+  fill: #aaa;
+}
+
+#states .active {
+  fill: orange;
+}
+
+#state-borders {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.5px;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+#canvas {
+  position: relative;
+}
+.population {
+    stroke: steelblue;
+    stroke-width: 1px;
+}
+.GDP {
+    stroke: steelblue;
+    stroke-width: 1px;
+}
+.average_GDP {
+    stroke: steelblue;
+    stroke-width: 1px;
+}
+
+div.tooltip1 {
+  position: absolute;
+  text-align: center;
+  width: 120px;
+  height: 75px;
+  padding: 2px;
+  font: 12px sans-serif;
+  background: steelblue;
+  color: white;
+  border: 0px;
+  border-radius: 3px;
+  pointer-events: none;
+  top: 0;
+  left: 0;
+}
+
+.bar_charge:hover {
+  fill: steelblue !important;
+  cursor: pointer;
+}
+
+.bar_pay:hover {
+  fill: steelblue !important;
+  cursor: pointer;
+}
+
+.axis path, .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+.axis text {
+    font: 10px sans-serif;
+}
+
+.axis .grid-line{
+    stroke: black;
+    shape-rendering: crispEdges;
+    stroke-opacity: .2;
+}
+
+.bubble{
+    fill-opacity: .5;
+}
+
+.label {
+    font-size: 12px;
+    font-weight: bold;
+    color: #333;
+}
+
+div.tooltip2 {
+    position: absolute;
+    width: 150px;
+    height: auto;
+    padding: 10px;
+    font: 12px sans-serif;
+    text-align: center;
+    background-color: white;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+    -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+	background: steelblue;
+	color: white;
+}
+div.tooltip3 {
+  position: absolute;
+  text-align: center;
+  width: 350px;
+  height: 15px;
+  padding: 2px;
+  font: 20px sans-serif;
+  border: 0px;
+  border-radius: 3px;
+  pointer-events: none;
+  font-weight: bold;
+}
+</style>
+<body>
+<div id="canvas-svg"></div>
+<script src="d3.min.js" charset="utf-8"></script> 
+<script>
+/*
+1.接下来的问题是，如何将rect显示在地图上面，而不是地图下面！——已解决
+2.接下来的问题是，如何鼠标移动到矩形上面，显示出该矩形的数值！———改成移到省份上面，一起显示了
+3.怎么改变div提示框的大小，在上面的style中的div.tooltip1。。。
+*/
+	var BAR_COLOR_1 = '#6ea865';
+	var BAR_COLOR_2 = '#ff99cc';
+	var BAR_COLOR_3 = '#1d7533';
+	var BAR_COLOR_4 = "#00ccff";
+	var BAR_COLOR_5 = "#0000ff";
+	var width  = 1000;
+	var height = 800;
+	
+	var svg = d3.select("body").append("svg")
+	    .attr("width", width)
+	    .attr("height", height)
+	    //.append("g")
+	    //.attr("transform", "translate(0,0)");
+	//用于移动到柱形上提示的
+	var div = d3.select("body")
+			.append("div")
+			.attr("class", "tooltip1")
+			.style("opacity", 0);
+		
+	//加了下面后，div一开始若设置成不透明，能显示出来，但鼠标移动到柱形上面，还是不行
+	svg.append("rect")
+			.attr("class", "background")
+			.attr("width", width)
+			.attr("height", height);
+			
+	//mercator:用于球形的墨卡托投影
+	var projection = d3.geo.mercator()
+						.center([107, 31])
+						.scale(850)
+    					.translate([width/2, height/2+100]);
+						
+	//svg.append("rect")
+	//	.attr("class", "background")
+	//	.attr("width", width)
+	//	.attr("height", height);
+		//.style("fill",BAR_COLOR_2);
+		
+	var g = svg.append("g"); //还要增添该变量
+	var path = d3.geo.path()
+					.projection(projection);
+	
+	
+	var color = d3.scale.category20();
+	
+	//存储各省中心centroid
+	var p_centroid={
+	};
+	var data=[
+			{name:"上海",pop:2301.91,GDP:16872.42,aveGDP:73297,dollar:10828,ratio:2.20,rank:1},
+			{name:"天津",pop:1293.82,GDP:9108.83,aveGDP:70402,dollar:10400,ratio:2.11,rank:2},
+			{name:"北京",pop:1961.24,GDP:13777.9,aveGDP:70251,dollar:10378,ratio:2.10,rank:3},
+			{name:"江苏",pop:7866,GDP:40974.79,aveGDP:52091,dollar:7695,ratio:1.56,rank:4},
+			{name:"内蒙古",pop:2470.64,GDP:12866.38,aveGDP:52077,dollar:7693,ratio:1.56,rank:5},
+			{name:"浙江",pop:5442.7,GDP:26917.6,aveGDP:49456,dollar:7306,ratio:1.48,rank:6},
+			{name:"辽宁",pop:4374.62,GDP:20703.8,aveGDP:47327,dollar:6991,ratio:1.42,rank:7},
+			{name:"广东",pop:10430.29,GDP:47445.74,aveGDP:45488,dollar:6720,ratio:1.36,rank:8},
+			{name:"山东",pop:9579.3,GDP:40093.12,aveGDP:41854,dollar:6183,ratio:1.25,rank:9},
+			{name:"福建",pop:3689.41,GDP:14333.78,aveGDP:38851,dollar:5739,ratio:1.16,rank:10},
+			{name:"吉林",pop:2746.23,GDP:9519.07,aveGDP:34662,dollar:5120,ratio:1.04,rank:11},
+			{name:"海南",pop:273.16,GDP:821.34,aveGDP:30068,dollar:4442,ratio:0.90,rank:12},
+			{name:"黑龙江",pop:3831.22,GDP:11356.68,aveGDP:29642,dollar:4379,ratio:0.89,rank:13},
+			{name:"新疆",pop:2104.26,GDP:6142.05,aveGDP:29189,dollar:4312,ratio:0.87,rank:14},
+			{name:"河北",pop:7185.43,GDP:20565.91,aveGDP:28622,dollar:4228,ratio:0.86,rank:15},
+			{name:"湖北",pop:5362.13,GDP:14923.73,aveGDP:27832,dollar:4111,ratio:0.83,rank:16},
+			{name:"重庆",pop:2884.62,GDP:7894.24,aveGDP:27367,dollar:4043,ratio:0.82,rank:17},
+			{name:"陕西",pop:3732.72,GDP:10117.47,aveGDP:27105,dollar:4004,ratio:0.81,rank:18},
+			{name:"山西",pop:3571.23,GDP:8986.35,aveGDP:25163,dollar:3717,ratio:0.75,rank:19},
+			{name:"河南",pop:9402.37,GDP:23190.42,aveGDP:24664,dollar:3643,ratio:0.74,rank:20},
+			{name:"青海",pop:562.66,GDP:1387.47,aveGDP:24659,dollar:3643,ratio:0.74,rank:21},
+			{name:"湖南",pop:6668.36,GDP:16360.14,aveGDP:24534,dollar:3624,ratio:0.74,rank:22},
+			{name:"宁夏",pop:630.14,GDP:1544.59,aveGDP:24512,dollar:3621,ratio:0.73,rank:23},
+			{name:"四川",pop:8041.83,GDP:17443.07,aveGDP:21690,dollar:3204,ratio:0.65,rank:24},
+			{name:"安徽",pop:5950,GDP:12794.48,aveGDP:21503,dollar:3177,ratio:0.64,rank:25},
+			{name:"江西",pop:4456.75,GDP:9435.99,aveGDP:21172,dollar:3128,ratio:0.63,rank:26},
+			{name:"广西",pop:4602.67,GDP:9512.95,aveGDP:20668,dollar:3053,ratio:0.62,rank:27},
+			{name:"西藏",pop:300.22,GDP:509.49,aveGDP:16971,dollar:2507,ratio:0.51,rank:28},
+			{name:"云南",pop:4596.6,GDP:7403.82,aveGDP:16107,dollar:2379,ratio:0.48,rank:29},
+			{name:"甘肃",pop:2557.53,GDP:4041.84,aveGDP:15804,dollar:2335,ratio:0.47,rank:30},
+			{name:"贵州",pop:3474.66,GDP:4654.98,aveGDP:13397,dollar:1979,ratio:0.40,rank:31}
+            ];
+	var name_id_map={};
+	
+	var colorScale2 = d3.scale.linear()
+				.domain([1, 30])
+				.range(["#00ccff", "#0000ff"]);
+				
+	for(var idx in data){	//原本显示的内容和地图不一致,忘记索引应该是rank-1。。。。
+		name_id_map[data[idx].name]=data[idx].rank-1;
+		var body = d3.select("body");
+		var new_h1 = body.select("h1");
+		new_h1.text(idx+" "+data[idx].name+" "+data[idx].rank);
+	}
+	
+	
+	d3.json("china_simplify.json", function(error, root) {
+		if (error) 
+			return console.error(error);
+		console.log(root.features);
+		
+		//root.features.forEach(function(d, i) {
+		//	var centroid = path.centroid(d);
+		//	centroid.x = centroid[0];
+		//	centroid.y = centroid[1];
+		//	centroid.feature = d;
+		//});
+		/*
+			这里是用的g.append("g").selectAll("path")，所以才将柱形图显示在地图上面,而不是svg.selectAll("path")
+		
+		*/
+		g.append("g")
+		    .selectAll("path")
+			.data( root.features )
+			.enter()
+			//.append("g")
+			.append("path")
+			//.attr("id","state-borders")
+			.attr("d", path )
+			.attr("stroke","#000")
+			.attr("stroke-width",1)
+			.attr("fill", function(d,i){
+				return colorScale2(i);
+			})
+			//增添中心
+			.attr("centroid", function(d) {
+					var centroid = path.centroid(d);
+					//原来是d.properties.name，可见china.simplify.json文件
+					if(d.properties.name=="北京" || d.properties.name=="天津" || d.properties.name=="上海"){
+						centroid[0]=centroid[0]+40;
+						p_centroid[d.properties.name]=centroid;
+					}
+					else if(d.properties.name=="河北"){
+						centroid[0]=centroid[0]-20;
+						centroid[1]=centroid[1]+10;
+						p_centroid[d.properties.name]=centroid;
+					}
+					else{
+						p_centroid[d.properties.name]=centroid;
+					}
+					//用下面的代码才是出来T^T的...一开始输出d.name，没有内容。。。后来改为d.properties,为[Object Object]
+					//var body = d3.select("body");
+					//var new_h1 = body.select("h1");
+					//new_h1.text(d.properties.name);
+				  })
+			.on("mouseover",function(d){
+                d3.select(this)
+                    .attr("fill","yellow");//下面可以显示图片，但是显示的省份名字都是贵州。。。。
+				var centroid = p_centroid[d.properties.name];
+				var id=name_id_map[d.properties.name];
+				var x = centroid[0] - 40;
+				var y = centroid[1] - data[id].GDP / 1000 - 80;
+				div.transition().duration(200).style("opacity", 1);
+				var people=Math.round(data[id].pop / 100);
+				var gdp=Math.round(data[id].GDP / 1000);
+				var avegdp=Math.round(data[id].aveGDP / 1000) ;
+				div.html(data[id].name + "<br/>"+"人口："+people+"百万人"+"<br/>"+"GDP："+ gdp +"K亿元"+"<br/>"+"人均GDP："+avegdp+ "K元/人"+"<br/>"+"人均GDP排名："+data[id].rank)
+				.style("left", x + "px")
+				.style("top", y + "px");
+            })
+            .on("mouseout",function(d,i){
+                d3.select(this)
+                    .attr("fill",colorScale2(i));
+				div.transition().duration(500).style("opacity", 0);
+            });
+			
+		//-----------------------------------------
+			for (var idx in data) {
+				//人口
+				g.append("rect")
+					  .attr("class", "population")
+					  .style("fill", BAR_COLOR_1)
+					  .attr("stroke","#3366ff")
+					  .attr("stroke-width",1)
+					  .attr("width", 10)  //柱形宽度
+					  .attr("state", idx)
+					  .attr("transform", function(d) {
+						  var centroid = p_centroid[data[idx].name];
+						  centroid[0] = centroid[0]-30+20;
+						  centroid[1]=centroid[1]-data[idx].pop/100;//centroid[0]\[1]为中点x,y坐标
+						  return "translate(" +centroid+  ")";
+						  //return "translate(" +idx*20+  ",40)";
+					  })
+					  .attr("height", function(d) {
+						  if (data[idx]) {
+							  return data[idx].pop/100;
+						  } else {
+							  return 0;
+						  } //柱形高度
+					  })
+				//GDP
+				g.append("rect")
+					  .attr("class", "GDP")
+					  .style("fill", BAR_COLOR_2)
+					  .attr("stroke","#3366ff")
+					  .attr("stroke-width",1)
+					  .attr("width", 10)  //柱形宽度
+					  .attr("state", idx)
+					  .attr("transform", function(d) {
+						  var centroid = p_centroid[data[idx].name];
+						  centroid[0] = centroid[0]+10;
+						  centroid[1]=centroid[1]+data[idx].pop/100-2*data[idx].GDP/1000;//centroid[0]\[1]为中点x,y坐标
+						  return "translate(" +centroid+  ")";
+						  //return "translate(" +idx*20+  ",40)";
+					  })
+					  .attr("height", function(d) {
+						  if (data[idx]) {
+							  return 2*data[idx].GDP/1000;
+						  } else {
+							  return 0;
+						  } //柱形高度
+					  })
+				//人均GDP
+				  g.append("rect")
+					  .attr("class", "average_GDP")
+					  .style("fill", BAR_COLOR_3)
+					  .attr("stroke","#3366ff")
+					  .attr("stroke-width",1)
+					  .attr("width", 10)  //柱形宽度
+					  .attr("state", idx)
+					  .attr("transform", function(d) {
+						  var centroid = p_centroid[data[idx].name];
+						  centroid[0] = centroid[0]+10;
+						  //这个平移公式也要推一下，才能保证三个柱形底部都在一个平面
+						  centroid[1]=centroid[1]+2*data[idx].GDP/1000-data[idx].aveGDP/1000;  //centroid[0]\[1]为中点x,y坐标
+						  return "translate(" +centroid+  ")";
+						  //return "translate(" +idx*20+  ",40)";
+					  })
+					  .attr("height", function(d) {
+						  if (data[idx]) {
+							  return data[idx].aveGDP/1000;
+						  } else {
+							  return 0;
+						  } //柱形高度
+					  })
+			  }
+					
+		//------------------------------------------
+	});
+	
+	
+	//要移出到d3.json外，才能显示出来
+	//定义人口的图例说明
+			var legend1 = svg.append("g")
+				.attr("class", "legend")
+				.attr("transform", function(d, i) { return "translate(0,20)"; });
+
+			legend1.append("rect")
+				.attr("x",  150)
+				.attr("width", 18)
+				.attr("height", 18)
+				.style("fill", BAR_COLOR_1);
+
+			legend1.append("text")
+				.attr("x", 130)
+				.attr("y", 9)
+				.attr("dy", ".35em")
+				.style("text-anchor", "end")
+				.text(function(d) { return "人口(百万人)"; });
+				
+		   //定义GDP的图例说明
+			var legend2 = svg.append("g")
+				.attr("class", "legend")
+				.attr("transform", function(d, i) { return "translate(0,40)"; });
+
+			legend2.append("rect")
+				.attr("x", 150)
+				.attr("width", 18)
+				.attr("height", 18)
+				.style("fill", BAR_COLOR_2);
+
+			legend2.append("text")
+				.attr("x", 130)
+				.attr("y", 9)
+				.attr("dy", ".35em")
+				.style("text-anchor", "end")
+				.text(function(d) { return "GDP(K亿元)"; });
+				
+			//定义人均GDP的图例说明
+			var legend3 = svg.append("g")
+				.attr("class", "legend")
+				.attr("transform", function(d, i) { return "translate(0,60)"; });
+
+			legend3.append("rect")
+				.attr("x", 150)
+				.attr("width", 18)
+				.attr("height", 18)
+				.style("fill", BAR_COLOR_3);
+
+			legend3.append("text")
+				.attr("x", 130)
+				.attr("y", 9)
+				.attr("dy", ".35em")
+				.style("text-anchor", "end")
+				.text(function(d) { return "人均GDP(K元/人)"; });
+			//定义人均GDP排名的图例说明
+			var legend4 = svg.append("g")
+				.attr("class", "legend")
+				.attr("transform", function(d, i) { return "translate(0,80)"; });
+
+			legend4.append("rect")
+				.attr("x", 180)
+				.attr("width", 18)
+				.attr("height", 18)
+				.style("fill", BAR_COLOR_4);
+
+			legend4.append("text")
+				.attr("x", 170)
+				.attr("y", 9)
+				.attr("dy", ".35em")
+				.style("text-anchor", "end")
+				.text(function(d) { return "人均GDP排名"+"(由浅到深)"; });
+				
+		var title1 = d3.select("body").append("div")
+			.attr("class", "tooltip3")
+			.style("opacity", 1)
+			.html("第六次人口普查——地图")
+			.style("left", 300)
+			.style("top", 20);
+//-----------------------------------------------------	
+	//散点图的代码
+	var width2 = 1200;
+    var	height2 = 500;
+    var	margin = 50;
+
+    var commasFormatter = d3.format(",.0f");
+
+    var xScale = d3.scale.sqrt()
+				.domain([500,50000])
+				.rangeRound([margin, width2-margin]),
+		yScale = d3.scale.linear()
+				.domain([100,11000])
+				.rangeRound([height2-margin, margin]),
+		rScale = d3.scale.linear()
+				.domain([0,75000])
+				.rangeRound([15, 75]);
+
+    var colorScale = d3.scale.linear()
+				.domain([20000, 40000, 60000, 80000])
+				.range(["#2E8ECE", "#40D47E", "#E98B39", "#D14233"]);
+
+    var xAxis = d3.svg.axis()
+            .scale(xScale)
+            .orient("bottom")
+			.ticks(10)
+            .tickFormat(function(d) { return d ; })
+			.tickValues([1000, 2500, 5000, 8000, 10000, 15000, 20000,30000,40000,50000]);;
+
+    var yAxis = d3.svg.axis()
+            .scale(yScale)
+            .orient("left")
+            .ticks(7)
+            .tickFormat(function(d) { return d; })
+            .tickValues([0, 500, 2000, 4000, 7000, 9000, 11000]);
+
+    var div2 = d3.select("body").append("div")
+			.attr("class", "tooltip2")
+			.style("opacity", 0);   
+
+    var svg2 = d3.select("body").append("svg")
+    		.attr("width", width2)
+    		.attr("height", height2);
+
+    svg2.append("g")       
+        .attr("class", "axis")
+        .attr("transform", function(){ 
+            return "translate(0, " + (height2 / 2) + ")";
+        })
+        .call(xAxis)
+        .append("text")
+    	.attr("x", width2 - 35)
+    	.attr("y", -10)
+    	.style("text-anchor", "middle")
+    	.attr("font-size", "10px")
+    	.text("各省GDP(亿元)")
+		.style("font-weight","bold");
+    
+    svg2.append("g")       
+        .attr("class", "axis")
+        .attr("transform", function(){ 
+            return "translate(" + margin + ", 0)";
+        })
+        .call(yAxis)
+        .append("text")
+		.attr("transform", "rotate(-90)")
+		.attr("x", -250)
+		.attr("y", -20)
+		.attr("dy", ".5em")
+		.style("text-anchor", "middle")
+		.text("各省人口(万人)")
+		.style("font-weight","bold");
+
+    d3.json("china_map.json", function (data) {
+		svg2.selectAll("text.label")
+			.data(data)
+			.enter()
+			.append("text")
+			.attr("class", "label")
+			.text(function (d) {
+					return d.province;
+			})
+			.attr("style", "text-anchor:middle")
+			.attr("x", function (d) {
+					return xScale(d.GDP);
+			})
+			.attr("y", function (d) {
+					return yScale(d.people);
+			});
+
+		svg2.selectAll("circle")
+			.data(data)
+			.enter()
+			.append("circle")
+			.attr("class","bubble")
+			.style("stroke", function (d) {
+					return colorScale(d.aveGDP);
+			})
+			.style("fill", function (d) {
+					return colorScale(d.aveGDP);
+			})
+			.attr("cx", function (d) {
+					return xScale(d.GDP);
+			})
+			.attr("cy", function (d) {
+					return yScale(d.people);
+			})
+			.attr("r", function (d) {
+					return rScale(d.aveGDP);
+			})
+                        .on("mouseover", function(d) {
+					div2.transition()
+					.duration(200)
+					.style("opacity", .9);
+					div2.html("人均GDP"+d.aveGDP + "元/人" + "<br/>" + d.province)
+					.style("left", (d3.event.pageX) + "px")
+					.style("top", (d3.event.pageY - 28) + "px");
+			})
+			.on("mouseout", function(d) {
+					div2.transition()
+					.duration(500)
+					.style("opacity", 0);
+			}); 
+
+    });
+	
+
+	var title2 = d3.select("body").append("div")
+			.attr("class", "tooltip3")
+			.style("opacity", 1)
+			.html("第六次人口普查——散点图")
+			.style("left", 300)
+			.style("top", 820);
+//-----------------------------------------------------
+			
+</script>
+	
+</body>  
+</html>  
